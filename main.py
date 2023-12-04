@@ -27,11 +27,14 @@ class Phone(Field):
 
 
 class Birthday(Field):
-    def __init__(self, value=None):
-        if value and not self.is_valid_birthday(value):
+    @property
+    def value(self):
+        return self._value
+    @value.setter
+    def value(self, new_value):
+        if new_value is not None and not self.is_valid_birthday(new_value):
             raise ValueError("Invalid birthday format")
-        super().__init__(value)
-
+        self._value = new_value
     @staticmethod
     def is_valid_birthday(value):
         try:
@@ -75,34 +78,25 @@ class Record:
                 return p
         return None
 
-    # def days_to_birthday(self):
-    #     if self.birthday.value:
-    #         today = datetime.today()
-    #         # next_birthday = datetime(today.year, *map(int, self.birthday.value.split('-')))
-    #         next_birthday = datetime(today.year, map(int, self.birthday.value.split('-')))
-    #         if today > next_birthday:
-    #             next_birthday = datetime(today.year + 1, *map(int, self.birthday.value.split('-')))
-    #         return (next_birthday - today).days
-    #     return None
-    
-    # def days_to_birthday(self):
-    #     if self.birthday and self.birthday.value:
-    #         today = datetime.today()
-    #         next_birthday = datetime(today.year, *map(int, self.birthday.value.split('-')))
-    #         if today > next_birthday:
-    #             next_birthday = datetime(today.year + 1, *map(int, self.birthday.value.split('-')))
-    #         return (next_birthday - today).days
-    #     return None
     def days_to_birthday(self):
-        if self.birthday.value:
-            today = datetime.today()
-            date_parts = self.birthday.value.split('-')
-            print("Date parts:", date_parts)  # Add this line for debugging
-            next_birthday = datetime(today.year, *map(int, date_parts))
-            if today > next_birthday:
-                next_birthday = datetime(today.year + 1, *map(int, date_parts))
-            return (next_birthday - today).days
-        return None
+        if not self.birthday.value:
+            raise ValueError("Please, add birthday firstly")
+
+        today = datetime.now().date()
+        birthday_date = datetime.strptime(self.birthday.value, "%Y-%m-%d").date()
+
+        next_birthday_year = today.year
+
+        if today.month > birthday_date.month or (today.month == birthday_date.month and today.day > birthday_date.day):
+            next_birthday_year += 1
+
+        next_birthday = datetime(
+            year=next_birthday_year,
+            month=birthday_date.month,
+            day=birthday_date.day
+        )
+
+        return (next_birthday.date() - today).days
 
     def __str__(self):
         return f"Contact name: {self.name}, phones: {', '.join(str(p) for p in self.phones)}, birthday: {self.birthday}"

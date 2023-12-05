@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from collections import UserDict
 
 
@@ -17,9 +17,17 @@ class Name(Field):
 
 class Phone(Field):
     def __init__(self, value):
-        if not self.is_valid_phone(value):
-            raise ValueError("Invalid phone number format")
         super().__init__(value)
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, new_value):
+        if not self.is_valid_phone(new_value):
+            raise ValueError("Invalid phone number format")
+        self._value = new_value
 
     @staticmethod
     def is_valid_phone(value):
@@ -30,11 +38,13 @@ class Birthday(Field):
     @property
     def value(self):
         return self._value
+
     @value.setter
     def value(self, new_value):
         if new_value is not None and not self.is_valid_birthday(new_value):
             raise ValueError("Invalid birthday format")
         self._value = new_value
+
     @staticmethod
     def is_valid_birthday(value):
         try:
@@ -51,10 +61,8 @@ class Record:
         self.birthday = Birthday(birthday)
 
     def add_phone(self, phone):
-        if Phone.is_valid_phone(phone):
-            self.phones.append(Phone(phone))
-        else:
-            raise ValueError("Invalid phone number format")
+        new_phone = Phone(phone)
+        self.phones.append(new_phone)
 
     def remove_phone(self, phone):
         for p in self.phones:
@@ -63,14 +71,11 @@ class Record:
                 return
 
     def edit_phone(self, old_phone, new_phone):
-        if Phone.is_valid_phone(new_phone):
-            for p in self.phones:
-                if p.value == old_phone:
-                    p.value = new_phone
-                    return
-            raise ValueError("Old phone number not found")
-        else:
-            raise ValueError("Invalid new phone number format")
+        for p in self.phones:
+            if p.value == old_phone:
+                p.value = new_phone
+                return
+        raise ValueError("Old phone number not found")
 
     def find_phone(self, phone):
         for p in self.phones:
@@ -120,6 +125,7 @@ class AddressBook(UserDict):
 
     def __str__(self):
         return "\n".join(str(record) for record in self.data.values())
+
 
 def main():
     book = AddressBook()
